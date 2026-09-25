@@ -17,10 +17,10 @@ type UserRepo struct {
 }
 
 func (db *DB) User() store.UserRepository {
-	if db.User() != nil {
-		panic(db.User())
+	if db.Users == nil {
+		db.Users = NewUsersRepository(db.conn)
 	}
-	return NewUsersRepository(db.conn)
+	return db.Users
 }
 
 type UsersRepository struct {
@@ -32,14 +32,14 @@ func NewUsersRepository(conn *sqlx.DB) store.UserRepository {
 }
 
 func (u *UsersRepository) Get(ctx context.Context, filter *models.UserFilter) ([]*models.User, error) {
-	basicQuery := "SELECT *FROM Users"
-	searchQuery := ""
+	basicQuery := "SELECT * FROM Users"
+	args := []interface{}{}
 	if filter.Query != nil {
-		basicQuery += " WHERE name ilike '%$1%'" + *filter.Query + "%''"
-		searchQuery = *filter.Query
+		basicQuery += " WHERE name ILIKE $1"
+		args = append(args, "%"+*filter.Query+"%")
 	}
 	User := make([]*models.User, 0)
-	if err := u.conn.Select(&User, basicQuery, searchQuery); err != nil {
+	if err := u.conn.Select(&User, basicQuery, args...); err != nil {
 		return nil, fmt.Errorf("%s", err)
 	}
 	return User, nil

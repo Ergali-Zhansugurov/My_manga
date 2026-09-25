@@ -3,17 +3,17 @@ module manga
 go 1.22.0
 
 require (
-	github.com/Shopify/sarama v1.30.0
+	github.com/IBM/sarama v1.43.2
 	github.com/go-chi/chi v1.5.5
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/go-chi/render v1.0.3
 	github.com/hashicorp/golang-lru v1.0.2
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/jmoiron/sqlx v1.4.0
+	github.com/rabbitmq/amqp091-go v1.15.0
 )
 
 require (
-	github.com/IBM/sarama v1.43.2 // indirect
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/eapache/go-resiliency v1.6.0 // indirect

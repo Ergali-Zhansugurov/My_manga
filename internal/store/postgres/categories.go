@@ -3,17 +3,17 @@ package postgres
 import (
 	"context"
 	"fmt"
-	"manga/internal/store"
 	"manga/internal/models"
+	"manga/internal/store"
 
 	"github.com/jmoiron/sqlx"
 )
 
 func (db *DB) Category() store.CategoryRepository {
-	if db.Category() != nil {
-		panic(db.Category())
+	if db.Categorys == nil {
+		db.Categorys = NewCategoryRepository(db.conn)
 	}
-	return NewCategoryRepository(db.conn)
+	return db.Categorys
 }
 
 type CategoriesRepository struct {
@@ -39,14 +39,14 @@ func (c CategoriesRepository) Update(ctx context.Context, category *models.Categ
 	return nil
 }
 func (c CategoriesRepository) Get(ctx context.Context, filter *models.Categoryesfilter) ([]*models.Category, error) {
-	basicQuery := "SELECT *FROM categories"
-	searchQuery := ""
+	basicQuery := "SELECT * FROM categories"
+	args := []interface{}{}
 	if filter.Query != nil {
-		basicQuery += " WHERE name ilike '%$1%'" + *filter.Query + "%''"
-		searchQuery = *filter.Query
+		basicQuery += " WHERE name ILIKE $1"
+		args = append(args, "%"+*filter.Query+"%")
 	}
 	categories := make([]*models.Category, 0)
-	if err := c.conn.Select(&categories, basicQuery, searchQuery); err != nil {
+	if err := c.conn.Select(&categories, basicQuery, args...); err != nil {
 		return nil, fmt.Errorf("%S", err)
 	}
 	return categories, nil

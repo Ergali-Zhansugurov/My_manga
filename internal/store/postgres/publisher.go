@@ -10,10 +10,10 @@ import (
 )
 
 func (db *DB) Publisher() store.PublisherRepository {
-	if db.Publisher() != nil {
-		panic(db.Publisher())
+	if db.Publishers == nil {
+		db.Publishers = NewPublisherRepository(db.conn)
 	}
-	return NewPublisherRepository(db.conn)
+	return db.Publishers
 }
 
 type PublisherRepository struct {
@@ -25,14 +25,14 @@ func NewPublisherRepository(conn *sqlx.DB) store.PublisherRepository {
 }
 
 func (u *PublisherRepository) Get(ctx context.Context, filter *models.Publisherfilter) ([]*models.Publisher, error) {
-	basicQuery := "SELECT *FROM Users"
-	searchQuery := ""
+	basicQuery := "SELECT * FROM Publishers"
+	args := []interface{}{}
 	if filter.Query != nil {
-		basicQuery += " WHERE name ilike '%$1%'" + *filter.Query + "%''"
-		searchQuery = *filter.Query
+		basicQuery += " WHERE name ILIKE $1"
+		args = append(args, "%"+*filter.Query+"%")
 	}
 	Publisher := make([]*models.Publisher, 0)
-	if err := u.conn.Select(&Publisher, basicQuery, searchQuery); err != nil {
+	if err := u.conn.Select(&Publisher, basicQuery, args...); err != nil {
 		return nil, fmt.Errorf("%s", err)
 	}
 	return Publisher, nil

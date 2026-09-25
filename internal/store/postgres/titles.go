@@ -18,10 +18,10 @@ type TitlesRepo struct {
 }
 
 func (db *DB) Title() store.TitleRepository {
-	if db.Title() != nil {
-		panic(db.Title())
+	if db.Titles == nil {
+		db.Titles = NewTitlesRepository(db.conn)
 	}
-	return NewTitlesRepository(db.conn)
+	return db.Titles
 }
 
 type TitlesRepository struct {
@@ -46,14 +46,14 @@ func (c TitlesRepository) Create(ctx context.Context, Title *models.Title) error
 	return nil
 }
 func (c TitlesRepository) All(ctx context.Context, filter *models.Titlesfilter) ([]*models.Title, error) {
-	basicQuery := "SELECT *FROM Titles"
-	searchQuery := ""
+	basicQuery := "SELECT * FROM Titles"
+	args := []interface{}{}
 	if filter.Query != nil {
-		basicQuery += " WHERE name ilike '%$1%'" + *filter.Query + "%''"
-		searchQuery = *filter.Query
+		basicQuery += " WHERE name ILIKE $1"
+		args = append(args, "%"+*filter.Query+"%")
 	}
 	Title := make([]*models.Title, 0)
-	if err := c.conn.Select(&Title, basicQuery, searchQuery); err != nil {
+	if err := c.conn.Select(&Title, basicQuery, args...); err != nil {
 		return nil, fmt.Errorf("%s", err)
 	}
 	return Title, nil
